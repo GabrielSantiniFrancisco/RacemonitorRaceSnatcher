@@ -4,3 +4,4 @@ logs/
 jupyter/
 *.ipynb
 bkp/
+test_*
