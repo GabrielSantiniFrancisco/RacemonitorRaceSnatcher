@@ -28,9 +28,12 @@ class RaceMonitorKeyRetriever:
             race ID, captures browser performance logs, and extracts the WebSocket URL and the
             corresponding Sec-WebSocket-Key from network requests.
     """
-    def __init__(self, caller_script: str, config_file_path: str, transaction_id: str = None):
+    def __init__(self, caller_script: str, config_file_path: str, transaction_id: str = None, log_level: str = None):
         self.env = EnvManager(config_file_path)
         logging_config = self.env.config.get('logging_config', {})
+        # Override log level if provided
+        if log_level:
+            logging_config['level'] = log_level
         self.logger = CustomLogger(config=logging_config, logger_name=caller_script, transaction_id=transaction_id)
         formatted_config = "\n".join([f"{key}: {value}" for key, value in self.env.config.items() if 'API_KEY' not in key])
         self.logger.info("Environment variables and logger initialized successfully")

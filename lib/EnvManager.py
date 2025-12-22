@@ -32,8 +32,10 @@ class EnvManager:
     @staticmethod
     def read_config(file_path: str) -> dict:
         """Read a Python config file and return its variables as a dict."""
+        import os
         with open(file_path, 'r') as file: config_content = file.read()
-        config = {}
+        # Pass __file__ so config can use it for relative paths
+        config = {'__file__': os.path.abspath(file_path)}
         exec(config_content, config)
         config.pop('__builtins__', None)
         return config

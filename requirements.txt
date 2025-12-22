@@ -1,0 +1,11 @@
+# RacemonitorRaceSnatcher Dependencies
+
+# Web automation for extracting WebSocket credentials
+selenium>=4.15.0
+
+# WebSocket client for live race data
+websocket-client>=1.6.0
+
+# Data manipulation
+pandas>=2.0.0
+

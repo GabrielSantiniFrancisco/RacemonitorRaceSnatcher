@@ -1,4 +1,4 @@
-import threading, websocket, traceback
+import threading, websocket, traceback, ssl
 import pandas as pd
 from typing import Dict
 from dataclasses import dataclass, field
@@ -215,7 +215,7 @@ class Session:
             return f"+{seconds:02d}.{milliseconds:03d}"
 
 class RaceTimingHandler:
-    def __init__(self, caller_script: str, config_file_path: str, transaction_id: str = None):
+    def __init__(self, caller_script: str, config_file_path: str, transaction_id: str = None, log_level: str = None):
         self.session = Session()
         self.websocket = None
         self.running = False
@@ -226,6 +226,9 @@ class RaceTimingHandler:
 
         self.env = EnvManager(config_file_path)
         logging_config = self.env.config.get('logging_config', {})
+        # Override log level if provided
+        if log_level:
+            logging_config['level'] = log_level
         self.logger = CustomLogger(config=logging_config, logger_name=caller_script, transaction_id=transaction_id)
         formatted_config = "\n".join([f"{key}: {value}" for key, value in self.env.config.items() if 'API_KEY' not in key])
         self.logger.info("Environment variables and logger initialized successfully")
@@ -242,8 +245,16 @@ class RaceTimingHandler:
                 on_close=self.on_close)
             self.running = True
 
+            # Create SSL context that doesn't verify certificates
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
             # Start listening in a thread
-            self.listen_thread = threading.Thread(target=self.websocket.run_forever)
+            self.listen_thread = threading.Thread(
+                target=self.websocket.run_forever,
+                kwargs={"sslopt": {"cert_reqs": ssl.CERT_NONE, "check_hostname": False}}
+            )
             self.listen_thread.start()
         except Exception as e:
             self.logger.error(f"Connection error: {e}")
