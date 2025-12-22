@@ -1,4 +1,4 @@
-import threading, websocket, traceback
+import threading, websocket, traceback, ssl
 import pandas as pd
 from typing import Dict
 from dataclasses import dataclass, field
@@ -242,8 +242,16 @@ class RaceTimingHandler:
                 on_close=self.on_close)
             self.running = True
 
+            # Create SSL context that doesn't verify certificates
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+
             # Start listening in a thread
-            self.listen_thread = threading.Thread(target=self.websocket.run_forever)
+            self.listen_thread = threading.Thread(
+                target=self.websocket.run_forever,
+                kwargs={"sslopt": {"cert_reqs": ssl.CERT_NONE, "check_hostname": False}}
+            )
             self.listen_thread.start()
         except Exception as e:
             self.logger.error(f"Connection error: {e}")
